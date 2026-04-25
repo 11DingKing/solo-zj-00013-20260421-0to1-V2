@@ -1,6 +1,22 @@
-import { LoginResponse, Room, Booking, RecurrenceRule } from '@/types';
+import { LoginResponse, Room, Booking, RecurrenceRule, ConflictResponse } from '@/types';
 
 const API_BASE = '/api';
+
+export class ApiError extends Error {
+  public readonly status: number;
+  public readonly response: any;
+
+  constructor(message: string, status: number, response: any = {}) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.response = response;
+  }
+
+  isConflict(): this is ApiError & { response: ConflictResponse } {
+    return this.status === 409 && this.response?.conflict !== undefined;
+  }
+}
 
 export interface CreateBookingRequest {
   roomId: string;
@@ -43,8 +59,12 @@ class ApiClient {
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      throw new Error(error.error || `请求失败: ${response.status}`);
+      const errorData = await response.json().catch(() => ({}));
+      throw new ApiError(
+        errorData.error || `请求失败: ${response.status}`,
+        response.status,
+        errorData
+      );
     }
 
     if (response.status === 204) {

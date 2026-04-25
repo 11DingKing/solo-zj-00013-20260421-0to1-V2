@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { api, CreateBookingRequest } from '@/lib/api';
-import { Room, Booking, RecurrenceRule, recurrenceRuleLabels, isAdmin } from '@/types';
+import { api, CreateBookingRequest, ApiError } from '@/lib/api';
+import { Room, Booking, RecurrenceRule, recurrenceRuleLabels, isAdmin, ConflictResponse } from '@/types';
 
 const START_HOUR = 8;
 const END_HOUR = 18;
@@ -94,6 +94,12 @@ const BookingModal: React.FC<{
 
   const selectedRoom = rooms.find((r) => r.id === roomId);
 
+  const formatConflictTime = (startTime: string, endTime: string): string => {
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+    return `${start.getHours().toString().padStart(2, '0')}:${start.getMinutes().toString().padStart(2, '0')} - ${end.getHours().toString().padStart(2, '0')}:${end.getMinutes().toString().padStart(2, '0')}`;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -118,7 +124,14 @@ const BookingModal: React.FC<{
       onBookingCreated();
       onClose();
     } catch (err: any) {
-      setError(err.message || '预约失败');
+      if (err instanceof ApiError && err.isConflict()) {
+        const conflict = err.response.conflict;
+        const conflictTime = formatConflictTime(conflict.startTime, conflict.endTime);
+        const detailedError = `时间冲突：${conflict.date} ${conflictTime}，该时段已被「${conflict.username}」预约（${conflict.title}）`;
+        setError(detailedError);
+      } else {
+        setError(err.message || '预约失败');
+      }
     } finally {
       setLoading(false);
     }
