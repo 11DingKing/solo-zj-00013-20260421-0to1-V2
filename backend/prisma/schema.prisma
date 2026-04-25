@@ -18,6 +18,13 @@ enum Equipment {
   VIDEO_CONFERENCE
 }
 
+enum RecurrenceRule {
+  NONE
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
 model User {
   id        String    @id @default(cuid())
   username  String    @unique
@@ -29,29 +36,34 @@ model User {
 }
 
 model Room {
-  id        String      @id @default(cuid())
-  name      String
-  capacity  Int
-  floor     Int
-  equipment Equipment[]
-  bookings  Booking[]
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  id               String      @id @default(cuid())
+  name             String
+  capacity         Int
+  floor            Int
+  equipment        Equipment[]
+  bookings         Booking[]
+  availableStartTime String    @default("08:00")
+  availableEndTime String    @default("18:00")
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
 }
 
 model Booking {
-  id          String   @id @default(cuid())
-  roomId      String
-  userId      String
-  title       String
-  startTime   DateTime
-  endTime     DateTime
-  attendees   Int
-  room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                String         @id @default(cuid())
+  roomId            String
+  userId            String
+  title             String
+  startTime         DateTime
+  endTime           DateTime
+  attendees         Int
+  recurrenceRule    RecurrenceRule @default(NONE)
+  recurrenceGroupId String?
+  room              Room           @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
 
   @@index([roomId, startTime, endTime])
   @@index([userId])
+  @@index([recurrenceGroupId])
 }

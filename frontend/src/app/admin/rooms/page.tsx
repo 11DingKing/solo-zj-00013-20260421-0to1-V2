@@ -22,6 +22,8 @@ const RoomModal: React.FC<{
   const [capacity, setCapacity] = useState(10);
   const [floor, setFloor] = useState(1);
   const [equipment, setEquipment] = useState<Equipment[]>([]);
+  const [availableStartTime, setAvailableStartTime] = useState('08:00');
+  const [availableEndTime, setAvailableEndTime] = useState('18:00');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -33,11 +35,15 @@ const RoomModal: React.FC<{
       setCapacity(room.capacity);
       setFloor(room.floor);
       setEquipment([...room.equipment]);
+      setAvailableStartTime(room.availableStartTime);
+      setAvailableEndTime(room.availableEndTime);
     } else {
       setName('');
       setCapacity(10);
       setFloor(1);
       setEquipment([]);
+      setAvailableStartTime('08:00');
+      setAvailableEndTime('18:00');
     }
     setError('');
   }, [room]);
@@ -60,6 +66,8 @@ const RoomModal: React.FC<{
           capacity,
           floor,
           equipment,
+          availableStartTime,
+          availableEndTime,
         });
       } else {
         await api.createRoom({
@@ -67,6 +75,8 @@ const RoomModal: React.FC<{
           capacity,
           floor,
           equipment,
+          availableStartTime,
+          availableEndTime,
         });
       }
       onSaved();
@@ -157,6 +167,40 @@ const RoomModal: React.FC<{
                     <span style={{ fontSize: '0.875rem' }}>{option.label}</span>
                   </label>
                 ))}
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">可用时间段</label>
+              <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: 4, display: 'block' }}>
+                    开始时间
+                  </label>
+                  <input
+                    type="time"
+                    className="form-input"
+                    value={availableStartTime}
+                    onChange={(e) => setAvailableStartTime(e.target.value)}
+                    required
+                  />
+                </div>
+                <span style={{ color: '#64748b' }}>至</span>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: 4, display: 'block' }}>
+                    结束时间
+                  </label>
+                  <input
+                    type="time"
+                    className="form-input"
+                    value={availableEndTime}
+                    onChange={(e) => setAvailableEndTime(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+              <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: 4 }}>
+                预约时间必须在此时间段内
               </div>
             </div>
           </div>
@@ -269,6 +313,7 @@ export default function AdminRoomsPage() {
               <div className="room-card-meta">
                 <div>楼层：{room.floor}楼</div>
                 <div>容量：{room.capacity}人</div>
+                <div>可用时间：{room.availableStartTime} - {room.availableEndTime}</div>
               </div>
               {room.equipment.length > 0 && (
                 <div style={{ marginTop: 12 }}>

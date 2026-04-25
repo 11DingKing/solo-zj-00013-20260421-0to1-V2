@@ -37,6 +37,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               <Link href="/rooms" className={`navbar-link ${isActive('/rooms') ? 'active' : ''}`}>
                 会议室
               </Link>
+              <Link href="/calendar" className={`navbar-link ${isActive('/calendar') ? 'active' : ''}`}>
+                周视图
+              </Link>
               <Link href="/bookings" className={`navbar-link ${isActive('/bookings') ? 'active' : ''}`}>
                 我的预约
               </Link>

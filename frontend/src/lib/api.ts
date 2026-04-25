@@ -1,6 +1,21 @@
-import { LoginResponse, Room, Booking } from '@/types';
+import { LoginResponse, Room, Booking, RecurrenceRule } from '@/types';
 
 const API_BASE = '/api';
+
+export interface CreateBookingRequest {
+  roomId: string;
+  title: string;
+  startTime: string;
+  endTime: string;
+  attendees: number;
+  recurrenceRule?: RecurrenceRule;
+}
+
+export interface CreateBookingResponse {
+  bookings: Booking[];
+  count: number;
+  recurrenceRule: RecurrenceRule;
+}
 
 class ApiClient {
   private getToken(): string | null {
@@ -84,18 +99,18 @@ class ApiClient {
     return this.request<Booking[]>(`/bookings/by-date?${params.toString()}`);
   }
 
+  async getBookingsByWeek(weekStart: string, roomId?: string): Promise<Booking[]> {
+    const params = new URLSearchParams({ weekStart });
+    if (roomId) params.append('roomId', roomId);
+    return this.request<Booking[]>(`/bookings/by-week?${params.toString()}`);
+  }
+
   async getMyBookings(): Promise<Booking[]> {
     return this.request<Booking[]>('/bookings/my');
   }
 
-  async createBooking(data: {
-    roomId: string;
-    title: string;
-    startTime: string;
-    endTime: string;
-    attendees: number;
-  }): Promise<Booking> {
-    return this.request<Booking>('/bookings', {
+  async createBooking(data: CreateBookingRequest): Promise<CreateBookingResponse> {
+    return this.request<CreateBookingResponse>('/bookings', {
       method: 'POST',
       body: JSON.stringify(data),
     });
