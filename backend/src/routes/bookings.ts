@@ -18,6 +18,15 @@ const formatDateForCache = (date: Date): string => {
   return date.toISOString().split('T')[0];
 };
 
+const invalidateRoomCache = async (roomId: string, dates: Date[]): Promise<void> => {
+  const uniqueDates = new Set(dates.map((d) => formatDateForCache(d)));
+  const keys = Array.from(uniqueDates).map((date) => getRoomBookingsCacheKey(roomId, date));
+  
+  if (keys.length > 0) {
+    await redis.del(...keys);
+  }
+};
+
 const parseTimeString = (timeStr: string): { hour: number; minute: number } => {
   const [hour, minute] = timeStr.split(':').map(Number);
   return { hour, minute };
@@ -38,15 +47,6 @@ const isTimeWithinRange = (
   const endMinutes = endHour * 60 + endMinute;
   
   return timeMinutes >= startMinutes && timeMinutes <= endMinutes;
-};
-
-const invalidateRoomCache = async (roomId: string, dates: Date[]): Promise<void> => {
-  const uniqueDates = new Set(dates.map((d) => formatDateForCache(d)));
-  const keys = Array.from(uniqueDates).map((date) => getRoomBookingsCacheKey(roomId, date));
-  
-  if (keys.length > 0) {
-    await redis.del(...keys);
-  }
 };
 
 interface ConflictInfo {
